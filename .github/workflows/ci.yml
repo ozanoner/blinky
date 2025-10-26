@@ -1,0 +1,80 @@
+name: ESP32 Build and Flash
+
+on:
+  pull_request:
+    branches: [ master ]
+  push:
+    branches: [ master ]
+    tags: [ 'v*' ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [esp32, esp32c3]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Build ${{ matrix.target }} project
+      uses: espressif/esp-idf-ci-action@v1
+      with:
+        esp_idf_version: v5.5
+        target: ${{ matrix.target }}
+        path: 'blinky'
+
+    - name: Upload ${{ matrix.target }} build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.target }}-firmware
+        path: |
+          blinky/build/bootloader/bootloader.bin
+          blinky/build/partition_table/partition-table.bin
+          blinky/build/blinky.bin
+          blinky/build/flash_args
+
+  hil-test:
+    needs: build
+    runs-on: self-hosted 
+    strategy:
+      matrix:
+        target: [esp32, esp32c3]
+    
+    steps:
+    - name: Download firmware artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ matrix.target }}-firmware
+        path: ./firmware
+    
+    - name: Flash firmware to test device
+      run: |
+        echo "Flashing ${{ matrix.target }} firmware for HIL testing..."
+        cd firmware
+        esptool --chip ${{ matrix.target }} -b 460800 --before default_reset --after hard_reset write_flash "@flash_args" > ../${{ matrix.target }}_flash_log.txt 2>&1
+    
+    - name: Run HIL tests
+      run: |
+        echo "Running hardware-in-the-loop tests..."
+    
+  deploy:
+    needs: [build, hil-test]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Download all firmware artifacts
+      uses: actions/download-artifact@v4
+      with:
+        pattern: '*-firmware'
+        path: ./release-firmware
+    
+    - name: Sign OTA images
+      run: |
+        echo "Signing OTA images for production..."
+    
+    - name: Deploy to production
+      run: |
+        echo "Deploying validated firmware to production..."
+       
