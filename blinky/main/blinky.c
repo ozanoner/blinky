@@ -51,6 +51,7 @@ static void Blinky_dispatch(Blinky *const me, Event const *const e)
 
     case USER_SIG:
         AppBSP_toggle_red();
+        AppBSP_toggle_blue();
         break;
 
     default:
