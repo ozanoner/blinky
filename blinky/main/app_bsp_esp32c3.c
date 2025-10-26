@@ -3,13 +3,16 @@
 #include "app_bsp.h"
 #include "led_strip.h"
 
+#define BUTTON_GPIO 9
+
 static led_strip_handle_t led_strip;
 static uint8_t red_val = 0;
 static uint8_t blue_val = 255;
+static uint8_t green_val = 0;
 
 static void update_led()
 {
-    led_strip_set_pixel(led_strip, 0, red_val, 0, blue_val);
+    led_strip_set_pixel(led_strip, 0, red_val, green_val, blue_val);
     led_strip_refresh(led_strip);
 }
 
@@ -26,6 +29,8 @@ void AppBSP_init()
     led_strip_new_rmt_device(&strip_config, &rmt_config, &led_strip);
 
     update_led();
+
+    AppBSPButton_init(BUTTON_GPIO);
 }
 
 void AppBSP_toggle_red()
@@ -37,5 +42,11 @@ void AppBSP_toggle_red()
 void AppBSP_toggle_blue()
 {
     blue_val = (blue_val == 0) ? 255 : 0;
+    update_led();
+}
+
+void AppBSP_toggle_green()
+{
+    green_val = (green_val == 0) ? 255 : 0;
     update_led();
 }
