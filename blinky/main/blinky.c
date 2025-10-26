@@ -9,7 +9,14 @@ typedef struct
 {
     Active super;
     TimeEvent te;
+    bool green_is_on;
 } Blinky;
+
+typedef enum
+{
+    TIMEOUT_SIG = USER_SIG,
+    BUTTON_CLICKED_SIG,
+} BlinkySignal_t;
 
 static Blinky blinky;
 static StackType_t blinky_stack[configMINIMAL_STACK_SIZE * 2];
@@ -39,6 +46,7 @@ static void Blinky_ctor(Blinky *const me)
     Active_ctor(&me->super, (DispatchHandler)&Blinky_dispatch);
     me->te.type = TYPE_PERIODIC;
     TimeEvent_ctor(&me->te, USER_SIG, &me->super);
+    me->green_is_on = false;
 }
 
 static void Blinky_dispatch(Blinky *const me, Event const *const e)
@@ -51,9 +59,15 @@ static void Blinky_dispatch(Blinky *const me, Event const *const e)
         TimeEvent_arm(&me->te, 3000);
         break;
 
-    case USER_SIG:
+    case TIMEOUT_SIG:
         AppBSP_toggle_red();
         AppBSP_toggle_blue();
+        break;
+
+    case BUTTON_CLICKED_SIG:
+        AppBSP_toggle_green();
+        me->green_is_on = !me->green_is_on;
+        ESP_LOGI(TAG, "Green LED: %s", me->green_is_on ? "ON" : "OFF");
         break;
 
     default:
@@ -64,4 +78,7 @@ static void Blinky_dispatch(Blinky *const me, Event const *const e)
 static void handle_button_click()
 {
     ESP_LOGI(TAG, "Button clicked!");
+
+    static Event e = {.sig = BUTTON_CLICKED_SIG};
+    Active_post((Active *)&blinky.super, (Event *)&e);
 }
