@@ -4,7 +4,7 @@ else()
     set(APP_BSP_SRC "app_bsp_esp32.c")
 endif()
 
-idf_component_register(SRCS ${APP_BSP_SRC} "blinky.c"
+idf_component_register(SRCS ${APP_BSP_SRC} "blinky.c" "app_bsp_button.c"
                     INCLUDE_DIRS ".")
 
 

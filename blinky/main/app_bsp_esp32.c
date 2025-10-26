@@ -5,6 +5,7 @@
 
 #define RED_LED_GPIO GPIO_NUM_18
 #define BLUE_LED_GPIO GPIO_NUM_19
+#define BUTTON_GPIO 22
 
 void AppBSP_init()
 {
@@ -15,6 +16,8 @@ void AppBSP_init()
     gpio_config(&io_conf);
 
     gpio_set_level(BLUE_LED_GPIO, 1);
+
+    AppBSPButton_init(BUTTON_GPIO);
 }
 
 void AppBSP_toggle_red()

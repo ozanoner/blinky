@@ -17,11 +17,13 @@ static Event *blinky_queue[10];
 
 static void Blinky_ctor(Blinky *const me);
 static void Blinky_dispatch(Blinky *const me, Event const *const e);
+static void handle_button_click();
 
 void app_main()
 {
     ESP_LOGI(TAG, "Example start");
     AppBSP_init();
+    AppBSPButton_set_handler(handle_button_click);
 
     Blinky_ctor(&blinky);
     Active_start(&blinky.super,
@@ -57,4 +59,9 @@ static void Blinky_dispatch(Blinky *const me, Event const *const e)
     default:
         break;
     }
+}
+
+static void handle_button_click()
+{
+    ESP_LOGI(TAG, "Button clicked!");
 }
