@@ -4,6 +4,14 @@
 #include "led_strip.h"
 
 static led_strip_handle_t led_strip;
+static uint8_t red_val = 0;
+static uint8_t blue_val = 255;
+
+static void update_led()
+{
+    led_strip_set_pixel(led_strip, 0, red_val, 0, blue_val);
+    led_strip_refresh(led_strip);
+}
 
 void AppBSP_init()
 {
@@ -16,20 +24,18 @@ void AppBSP_init()
     led_strip_rmt_config_t rmt_config = {};
 
     led_strip_new_rmt_device(&strip_config, &rmt_config, &led_strip);
+
+    update_led();
 }
 
 void AppBSP_toggle_red()
 {
-    static bool is_on = false;
-    is_on = !is_on;
+    red_val = (red_val == 0) ? 255 : 0;
+    update_led();
+}
 
-    if (is_on)
-    {
-        led_strip_set_pixel(led_strip, 0, 255, 0, 0);
-        led_strip_refresh(led_strip);
-    }
-    else
-    {
-        led_strip_clear(led_strip);
-    }
+void AppBSP_toggle_blue()
+{
+    blue_val = (blue_val == 0) ? 255 : 0;
+    update_led();
 }
